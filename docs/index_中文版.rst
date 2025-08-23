@@ -41,7 +41,8 @@ extended periods of time.
 
     login_manager.init_app(app)
 
-默认情况下，Flask-Login 使用会话（sessions）进行认证。这意味着你必须在你的应用上设置一个密钥（secret key），否则 Flask 会给你一个错误信息，告诉你需要这样做。参见 `Flask 文档关于会话的部分`_ 来了解如何设置密钥。
+默认情况下，Flask-Login 使用会话（sessions）进行认证。这意味着你必须在你的应用上设置一个密钥（secret key），否则 Flask 会给你一个错误信息，告
+诉你需要这样做。参见 `Flask 文档关于会话的部分`_ 来了解如何设置密钥。
 
 *警告*：**务必**使用“如何生成好的密钥”部分中给出的命令来生成你自己的密钥。**不要**使用示例中的密钥。
 
@@ -49,7 +50,8 @@ extended periods of time.
 
 它是如何工作的
 ============
-你需要提供一个 `~LoginManager.user_loader` 回调函数。这个回调函数用于从会话中存储的用户 ID 重新加载用户对象。它应该接收一个用户的 `str` 类型 ID，并返回相应的用户对象。例如::
+你需要提供一个 `~LoginManager.user_loader` 回调函数。这个回调函数用于从会话中存储的用户 ID 重新加载用户对象。它应该接收一个用户的 `str` 类
+型 ID，并返回相应的用户对象。例如::
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -65,13 +67,15 @@ extended periods of time.
     这个属性应该在用户已认证时返回 `True`，即他们提供了有效的凭据。（只有已认证的用户才能满足 `login_required` 的条件。）
 
 `is_active`
-    这个属性应该在用户是活跃状态时返回 `True` —— 除了已认证，他们的账户也已激活、未被暂停，或者你的应用设定的任何拒绝账户的条件。非活跃账户可能无法登录（当然，强制登录除外）。
+    这个属性应该在用户是活跃状态时返回 `True` —— 除了已认证，他们的账户也已激活、未被暂停，或者你的应用设定的任何拒绝账户的条件。非活跃账户可
+    能无法登录（当然，强制登录除外）。
 
 `is_anonymous`
     这个属性应该在用户是匿名用户时返回 `True`。（真实用户应该返回 `False`。）
 
 `get_id()`
-    这个方法必须返回一个能唯一标识该用户的 `str` 字符串，并且可以用于从 `~LoginManager.user_loader` 回调中加载用户。请注意，这**必须**是一个 `str` 类型 —— 如果 ID 本质上是 `int` 或其他类型，你需要将其转换为 `str`。
+    这个方法必须返回一个能唯一标识该用户的 `str` 字符串，并且可以用于从 `~LoginManager.user_loader` 回调中加载用户。请注意，这**必须**是
+    一个 `str` 类型 —— 如果 ID 本质上是 `int` 或其他类型，你需要将其转换为 `str`。
 
 为了更容易地实现用户类，你可以继承 `UserMixin`，它为所有这些属性和方法提供了默认实现。（但这不是必须的。）
 
@@ -107,7 +111,8 @@ extended periods of time.
             return flask.redirect(next or flask.url_for('index'))
         return flask.render_template('login.html', form=form)
 
-*警告*：你**必须**验证 `next` 参数的值。如果你不这样做，你的应用将容易受到开放重定向漏洞的攻击。关于 `url_has_allowed_host_and_scheme` 的实现示例，请参见 Django 的 `实现 <https://github.com/django/django/blob/4.0/django/utils/http.py#L239>`_。
+*警告*：你**必须**验证 `next` 参数的值。如果你不这样做，你的应用将容易受到开放重定向漏洞的攻击。关于 `url_has_allowed_host_and_scheme` 的
+实现示例，请参见 Django 的 `实现 <https://github.com/django/django/blob/4.0/django/utils/http.py#L239>`_。
 
 就是这么简单。然后你就可以使用 `current_user` 代理来访问已登录的用户，这个代理在每个模板中都可用::
 
@@ -148,7 +153,8 @@ extended periods of time.
 
     login_manager.login_message_category = "info"
 
-当重定向到登录视图时，查询字符串中会有一个 ``next`` 变量，它表示用户试图访问的页面。或者，如果 `USE_SESSION_FOR_NEXT` 为 `True`，该页面会存储在会话中，键为 ``next``。
+当重定向到登录视图时，查询字符串中会有一个 ``next`` 变量，它表示用户试图访问的页面。或者，如果 `USE_SESSION_FOR_NEXT` 为 `True`，该页面会存储在
+会话中，键为 ``next``。
 
 如果你想进一步自定义该流程，可以用 `LoginManager.unauthorized_handler` 装饰一个函数::
 
@@ -170,7 +176,9 @@ extended periods of time.
 
 使用请求加载器进行自定义登录
 =================================
-有时你希望在不使用 Cookie 的情况下登录用户，例如使用请求头（header）的值或作为查询参数传递的 API 密钥。在这种情况下，你应该使用 `~LoginManager.request_loader` 回调函数。这个回调函数的行为应该与你的 `~LoginManager.user_loader` 回调相同，只是它接收的是 Flask 请求对象，而不是用户 ID。
+有时你希望在不使用 Cookie 的情况下登录用户，例如使用请求头（header）的值或作为查询参数传递的 API 密钥。在这种情况下，你应该使
+用 `~LoginManager.request_loader` 回调函数。这个回调函数的行为应该与你的 `~LoginManager.user_loader` 回调相同，只是它接收
+的是 Flask 请求对象，而不是用户 ID。
 
 例如，支持从 URL 参数和使用 `Authorization` 头的 Basic Auth 两种方式登录::
 
@@ -210,7 +218,8 @@ extended periods of time.
 - `is_anonymous` 为 `True`
 - `get_id()` 返回 `None`
 
-如果你对匿名用户有自定义需求（例如，他们需要有一个权限字段），你可以向 `LoginManager` 提供一个可调用对象（可以是一个类或工厂函数），用于创建匿名用户::
+如果你对匿名用户有自定义需求（例如，他们需要有一个权限字段），你可以向 `LoginManager` 提供一个可调用对象（可以是一个类或工厂函数），用于创建匿名用
+户::
 
     login_manager.anonymous_user = MyAnonymousUser
 
@@ -218,9 +227,13 @@ extended periods of time.
 
 记住我
 ===========
-默认情况下，当用户关闭浏览器时，Flask 会话（Session）会被删除，用户也会被登出。“记住我”功能可以防止用户在关闭浏览器时意外地被登出。这**不**意味着在用户登出后，会记住或预先填写登录表单中的用户名或密码。
+默认情况下，当用户关闭浏览器时，Flask 会话（Session）会被删除，用户也会被登出。“记住我”功能可以防止用户在关闭浏览器时意外地被登出。这**不**意味着在用户
+登出后，会记住或预先填写登录表单中的用户名或密码。
 
-“记住我”功能实现起来可能比较棘手。然而，Flask-Login 使其几乎变得透明——只需在调用 `login_user` 时传入 ``remember=True``。一个 Cookie 会被保存在用户的计算机上，然后如果用户的 ID 不在会话中，Flask-Login 会自动从该 Cookie 中恢复用户 ID。Cookie 的过期时间可以通过 `REMEMBER_COOKIE_DURATION` 配置项设置，也可以直接传给 `login_user`。该 Cookie 是防篡改的，因此如果用户篡改了它（例如，将自己的用户 ID 替换为别人的），该 Cookie 将仅仅被拒绝，就像它不存在一样。
+“记住我”功能实现起来可能比较棘手。然而，Flask-Login 使其几乎变得透明——只需在调用 `login_user` 时传入 ``remember=True``。一个 Cookie 会被保存在用户
+的计算机上，然后如果用户的 ID 不在会话中，Flask-Login 会自动从该 Cookie 中恢复用户 ID。Cookie 的过期时间可以通过 `REMEMBER_COOKIE_DURATION` 配置项
+设置，也可以直接传给 `login_user`。该 Cookie 是防篡改的，因此如果用户篡改了它（例如，将自己的用户 ID 替换为别人的），该 Cookie 将仅仅被拒绝，就像它不
+存在一样。
 
 这种级别的功能是自动处理的。然而，你可以（并且应该，如果你的应用处理任何敏感数据的话）提供额外的基础设施来增强你的“记住我” Cookie 的安全性。
 
@@ -237,15 +250,21 @@ extended periods of time.
     def get_id(self):
         return str(self.alternative_id)
 
-这样，当你更改用户的密码时，就可以自由地将用户的替代 ID 更改为一个新的随机生成的值，这将确保他们旧的认证会话将不再有效。请注意，替代 ID 仍然必须唯一地标识用户……把它看作是用户的第二个用户 ID。
+这样，当你更改用户的密码时，就可以自由地将用户的替代 ID 更改为一个新的随机生成的值，这将确保他们旧的认证会话将不再有效。请注意，替代 ID 仍然必须唯一地标
+识用户……把它看作是用户的第二个用户 ID。
 
-注释：这是一个重要的安全最佳实践。直接使用主键（如数据库自增ID）作为 remember token 的话，一旦用户修改密码，旧的 remember token 依然有效。使用一个可变的、独立的 `alternative_id`（或称为 `session_token`）可以实现“使所有其他设备登出”或“密码更改后旧会话失效”的功能。
+注释：这是一个重要的安全最佳实践。直接使用主键（如数据库自增ID）作为 remember token 的话，一旦用户修改密码，旧的 remember token 依然有效。使用一个
+可变的、独立的 `alternative_id`（或称为 `session_token`）可以实现“使所有其他设备登出”或“密码更改后旧会话失效”的功能。
 
 新鲜登录
 ============
-当用户登录时，他们的会话被标记为“新鲜的”（fresh），这表示他们实际上在该会话中进行了身份验证。当他们的会话被销毁并使用“记住我” Cookie 重新登录时，它被标记为“非新鲜的”（non-fresh）。`login_required` 不区分会话的新鲜度，这对大多数页面来说是没问题的。然而，像更改个人信息这样的敏感操作应该要求一个新鲜的登录。（像更改密码这样的操作，无论何时都应该要求重新输入密码。）
+当用户登录时，他们的会话被标记为“新鲜的”（fresh），这表示他们实际上在该会话中进行了身份验证。当他们的会话被销毁并使用“记住我” Cookie 重新登录时，
+它被标记为“非新鲜的”（non-fresh）。`login_required` 不区分会话的新鲜度，这对大多数页面来说是没问题的。然而，像更改个人信息这样的敏感操作应该要求一个
+新鲜的登录。（像更改密码这样的操作，无论何时都应该要求重新输入密码。）
 
-`fresh_login_required` 除了验证用户是否已登录外，还会确保他们的登录是新鲜的。如果不是，它会将他们重定向到一个页面，在那里他们可以重新输入凭据。你可以通过设置 `LoginManager.refresh_view`、`~LoginManager.needs_refresh_message` 和 `~LoginManager.needs_refresh_message_category` 来以与自定义 `login_required` 相同的方式来定制其行为::
+`fresh_login_required` 除了验证用户是否已登录外，还会确保他们的登录是新鲜的。如果不是，它会将他们重定向到一个页面，在那里他们可以重新输入凭据。
+你可以通过设置 `LoginManager.refresh_view`、`~LoginManager.needs_refresh_message` 和 `~LoginManager.needs_refresh_message_category` 来以与自
+定义 `login_required` 相同的方式来定制其行为::
 
     login_manager.refresh_view = "accounts.reauthenticate"
     login_manager.needs_refresh_message = (
@@ -262,7 +281,8 @@ extended periods of time.
 
 要再次将一个会话标记为新鲜的，请调用 `confirm_login` 函数。
 
-注释：`fresh_login_required` 是保护敏感操作的关键。例如，访问 `/profile/edit` 可能只需要 `login_required`，但访问 `/profile/change-password` 或 `/profile/delete` 则应使用 `fresh_login_required`，以确保是用户本人在操作。
+注释：`fresh_login_required` 是保护敏感操作的关键。例如，访问 `/profile/edit` 可能只需要 `login_required`，但访问 `/profile/change-password`
+ 或 `/profile/delete` 则应使用 `fresh_login_required`，以确保是用户本人在操作。
 
 Cookie 设置
 ===============
@@ -299,7 +319,8 @@ Cookie 的详细信息可以在应用设置中进行自定义。
 ==================
 虽然上述功能有助于保护你的“记住我”令牌免受 Cookie 窃贼的侵害，但会话 Cookie 仍然存在漏洞。Flask-Login 包含了会话保护功能，以帮助防止用户的会话被窃取。
 
-你可以在 `LoginManager` 上或应用的配置中配置会话保护。如果启用，它可以运行在 `basic`（基本）或 `strong`（强）模式下。要在 `LoginManager` 上设置，将 `~LoginManager.session_protection` 属性设置为 ``"basic"`` 或 ``"strong"``::
+你可以在 `LoginManager` 上或应用的配置中配置会话保护。如果启用，它可以运行在 `basic`（基本）或 `strong`（强）模式下。要在 `LoginManager` 上设置，
+将 `~LoginManager.session_protection` 属性设置为 ``"basic"`` 或 ``"strong"``::
 
     login_manager.session_protection = "strong"
 
@@ -309,9 +330,11 @@ Cookie 的详细信息可以在应用设置中进行自定义。
 
 默认情况下，它以 ``"basic"`` 模式激活。可以通过将应用配置中的 `SESSION_PROTECTION` 设置为 `None`、``"basic"`` 或 ``"strong"`` 来禁用。
 
-当会话保护处于活动状态时，每次请求，它都会为用户的计算机生成一个标识符（基本上是 IP 地址和用户代理的加密哈希值）。如果会话没有关联的标识符，则会将生成的标识符存储起来。如果它已有标识符，并且与生成的标识符匹配，则请求是正常的。
+当会话保护处于活动状态时，每次请求，它都会为用户的计算机生成一个标识符（基本上是 IP 地址和用户代理的加密哈希值）。如果会话没有关联的标识符，则会将生成的
+标识符存储起来。如果它已有标识符，并且与生成的标识符匹配，则请求是正常的。
 
-如果在 `basic` 模式下标识符不匹配，或者会话是永久性的（permanent），那么会话将仅被标记为非新鲜（non-fresh），任何需要新鲜登录的操作都将强制用户重新进行身份验证。（当然，你必须已经在适当的地方使用了新鲜登录，这个功能才能生效。）
+如果在 `basic` 模式下标识符不匹配，或者会话是永久性的（permanent），那么会话将仅被标记为非新鲜（non-fresh），任何需要新鲜登录的操作都将强制用户重新进
+行身份验证。（当然，你必须已经在适当的地方使用了新鲜登录，这个功能才能生效。）
 
 如果在 `strong` 模式下，对于非永久性会话，标识符不匹配，那么整个会话（以及存在的“记住我”令牌）将被删除。
 
@@ -322,7 +345,8 @@ Cookie 的详细信息可以在应用设置中进行自定义。
 
 为 API 禁用会话 Cookie
 =================================
-在向 API 进行身份验证时，你可能希望禁用设置 Flask 会话 Cookie。为此，可以使用一个自定义的会话接口（session interface），该接口根据你在请求上设置的标志来决定是否保存会话。例如::
+在向 API 进行身份验证时，你可能希望禁用设置 Flask 会话 Cookie。为此，可以使用一个自定义的会话接口（session interface），该接口根据你在请求上设置的
+标志来决定是否保存会话。例如::
 
     from flask import g
     from flask.sessions import SecureCookieSessionInterface
@@ -344,11 +368,13 @@ Cookie 的详细信息可以在应用设置中进行自定义。
 
 这可以防止在用户使用你的 `~LoginManager.request_loader` 进行身份验证时设置 Flask 会话 Cookie。
 
-注释：这是构建无状态 API 的关键技巧。当 API 使用 API Key 或 Bearer Token 认证时，不应创建有状态的 Flask Session Cookie，以避免不必要的服务器状态和潜在的会话固定攻击。此代码利用 `user_loaded_from_request` 信号来标记通过 `request_loader` 登录的请求。
+注释：这是构建无状态 API 的关键技巧。当 API 使用 API Key 或 Bearer Token 认证时，不应创建有状态的 Flask Session Cookie，以避免不必要的服务器状
+态和潜在的会话固定攻击。此代码利用 `user_loaded_from_request` 信号来标记通过 `request_loader` 登录的请求。
 
 自动化测试
 =================
-为了让你更容易编写自动化测试，Flask-Login 提供了一个简单的、自定义的测试客户端类，它可以为你设置用户的登录 Cookie：`~FlaskLoginClient`。要使用这个自定义测试客户端类，请将其分配给你的应用对象的 `test_client_class` 属性，如下所示::
+为了让你更容易编写自动化测试，Flask-Login 提供了一个简单的、自定义的测试客户端类，它可以为你设置用户的登录 Cookie：`~FlaskLoginClient`。要使用这
+个自定义测试客户端类，请将其分配给你的应用对象的 `test_client_class` 属性，如下所示::
 
     from flask_login import FlaskLoginClient
 
@@ -368,17 +394,21 @@ Cookie 的详细信息可以在应用设置中进行自定义。
 
 请注意，你必须使用关键字参数，而不是位置参数。例如，``test_client(user=user)`` 可以工作，但 ``test_client(user)`` 将无法工作。
 
-由于此自定义测试客户端类的实现方式，你可能需要**禁用会话保护**才能使你的测试正常工作。如果启用了会话保护，在使用测试客户端执行请求时，登录会话将在 `basic` 模式下被标记为非新鲜，或在 `strong` 模式下被直接拒绝。
+由于此自定义测试客户端类的实现方式，你可能需要**禁用会话保护**才能使你的测试正常工作。如果启用了会话保护，在使用测试客户端执行请求时，登录会话将
+在 `basic` 模式下被标记为非新鲜，或在 `strong` 模式下被直接拒绝。
 
 注释：`FlaskLoginClient` 极大地简化了需要认证的测试。但需注意：
-1.  **会话保护冲突**：测试客户端模拟的请求通常不会产生与真实浏览器相同的 IP/UA，因此会触发会话保护。在测试配置中设置 `SESSION_PROTECTION = None` 是常见做法。
+1.  **会话保护冲突**：测试客户端模拟的请求通常不会产生与真实浏览器相同的 IP/UA，因此会触发会话保护。在测试配置中设置 `SESSION_PROTECTION = None` 是
+常见做法。
 2.  **参数传递**：必须使用 `user=...` 和 `fresh_login=...` 这样的关键字参数。
 
 本地化
 ============
-默认情况下，`LoginManager` 使用 ``flash`` 在用户需要登录时显示消息。这些消息是英文的。如果你需要本地化，请将 `LoginManager` 的 `localize_callback` 属性设置为一个函数，该函数会在消息发送到 ``flash`` 之前被调用，例如 ``gettext``。此函数将接收消息作为参数，其返回值将代替原消息被发送到 ``flash``。
+默认情况下，`LoginManager` 使用 ``flash`` 在用户需要登录时显示消息。这些消息是英文的。如果你需要本地化，请将 `LoginManager` 的 `localize_callback` 
+属性设置为一个函数，该函数会在消息发送到 ``flash`` 之前被调用，例如 ``gettext``。此函数将接收消息作为参数，其返回值将代替原消息被发送到 ``flash``。
 
-注释：这是实现多语言应用的重要步骤。你可以将其设置为 `gettext.gettext` 或 `babel.gettext` 等函数，以便将 "Please log in to access this page." 等提示翻译成中文或其他语言。
+注释：这是实现多语言应用的重要步骤。你可以将其设置为 `gettext.gettext` 或 `babel.gettext` 等函数，以便将 "Please log in to access this page." 等提
+示翻译成中文或其他语言。
 
 API 文档
 =================
