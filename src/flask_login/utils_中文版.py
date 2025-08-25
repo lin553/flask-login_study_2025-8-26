@@ -23,7 +23,8 @@ from .signals import user_login_confirmed
 
 #: 当前用户的代理对象。如果没有用户登录，这将是一个匿名用户对象。
 current_user = LocalProxy(lambda: _get_user())
-
+        # 解决上下文依赖问题：在 Web 应用中，像 request、current_app 这样的对象是每个请求都不同的。
+        # LocalProxy 允许你定义一个全局变量（如 from flask import request），但在不同的请求上下文中，这个变量会自动指向当前请求的 Request 对象。
 
 def encode_cookie(payload, key=None):
     """
@@ -77,6 +78,58 @@ def make_next_param(login_url, current_url):
     :type login_url: str
     :param current_url: 需要被简化的 URL。
     :type current_url: str
+    
+    
+    例子1：
+        login_url = "https://shop.com/login"
+        current_url = "https://shop.com/cart?ref=header#items"
+
+        # 解析
+        l_url = urlsplit(login_url) 
+        # -> SplitResult(scheme='https', netloc='shop.com', path='/login', query='', fragment='')
+        c_url = urlsplit(current_url)
+        # -> SplitResult(scheme='https', netloc='shop.com', path='/cart', query='ref=header', fragment='items')
+
+        # 检查条件
+        # l_url.scheme ('https') == c_url.scheme ('https') -> True
+        # l_url.netloc ('shop.com') == c_url.netloc ('shop.com') -> True
+        # 条件满足，进行简化
+
+        simplified_next = urlunsplit(("", "", "/cart", "ref=header", ""))
+        # -> "/cart?ref=header" (注意：fragment '#' 通常不包含在 next 参数中，因为它是客户端处理的)
+
+        print(simplified_next) # 输出: "/cart?ref=header"
+        
+   
+    例子2：
+        login_url = "/login" # 相对路径，scheme 和 netloc 为空
+        current_url = "https://shop.com/profile?edit=true"
+
+        # 解析
+        l_url = urlsplit(login_url)
+        # -> SplitResult(scheme='', netloc='', path='/login', query='', fragment='')
+        c_url = urlsplit(current_url)
+        # -> SplitResult(scheme='https', netloc='shop.com', path='/profile', query='edit=true', fragment='')
+
+        # 检查条件
+        # not l_url.scheme -> True (因为 l_url.scheme 是空字符串)
+        # not l_url.netloc -> True (因为 l_url.netloc 是空字符串)
+        # 由于 `not l_url.scheme` 为 True，第一个 `and` 条件成立；`not l_url.netloc` 为 True，第二个 `and` 条件也成立。
+        # 条件满足，进行简化
+
+        simplified_next = urlunsplit(("", "", "/profile", "edit=true", ""))
+        # -> "/profile?edit=true"
+
+        print(simplified_next) # 输出: "/profile?edit=true"
+    
+    
+    总结：
+        make_next_param 函数是一个预防性措施：
+            主要目的：在安全的前提下，尽量缩短 next 参数，使其更像一个相对路径。
+            安全边界：它通过比较 login_url 和 current_url 的 scheme 和 netloc 来判断是否“同域”。只有同域才允许简化。
+            不是最终防线：它不能完全防止开放重定向攻击。最终的、最重要的安全检查必须在服务器端处理 next 参数时进行，
+                        即验证 next 参数（无论是简化后的还是完整的）是否指向一个可信的、内部的 URL。make_next_param 
+                        只是让这个验证过程更高效（处理短路径比处理长 URL 简单），并减少了暴露完整外部 URL 的风险。
     """
     # 解析 login_url 和 current_url
     l_url = urlsplit(login_url)
@@ -101,7 +154,7 @@ def expand_login_view(login_view):
     :type login_view: str
     """
     # 如果 login_view 已经是一个绝对 URL（以 http://, https://, / 开头），则直接返回。
-    if login_view.startswith(("https://", "http://", "/")):
+    if login_view.startswith(("https://", "http://", "/")): # startswith：方法是 Python 字符串对象的一个内置方法，用于检查字符串是否以特定的前缀开始。
         return login_view
 
     # 否则，假设它是一个视图函数名称，使用 Flask 的 url_for 函数将其转换为 URL。
@@ -134,18 +187,27 @@ def login_url(login_view, next_url=None, next_field="next"):
         return base
 
     # 解析基础 URL
-    parsed_result = urlsplit(base)
+    parsed_result = urlsplit(base)  # urlsplit 函数是Python标准库中的一个模块，位于urllib.parse中。它将给定的URL字符串解析为一个namedtuple对象，
+                                            # 并返回五个组成URL的部分，分别是scheme、netloc、path、query和fragment。
     # 解析基础 URL 的查询字符串，得到一个字典（保留空值）
     md = parse_qs(parsed_result.query, keep_blank_values=True)
+    
     # 使用 make_next_param 处理 next_url，生成一个可能被简化的 next 参数值。
     md[next_field] = make_next_param(base, next_url)
+    
     # 确定重定向的目标主机名。
     # 优先使用 FORCE_HOST_FOR_REDIRECTS 配置，如果未配置，则使用原始 URL 的主机名。
     netloc = current_app.config.get("FORCE_HOST_FOR_REDIRECTS") or parsed_result.netloc
+    
     # 使用新的查询字符串和（可能修改的）主机名创建一个新的 URL 元组。
+    # 其中，scheme 和 path 保持不变，query 使用 urlencode 将参数字典编码为查询字符串。
+            # urlencode功能：URL 编码确保所有浏览器都能正确传输 URL 字符串中的文本。 问号 ( ) 、和号 (&) 、斜杠标记 (/) 等字符，
+                            # 某些浏览器可能会截断或损坏空格。 因此，必须在标记或查询字符串中 <a> 对这些字符进行编码，浏览器可以
+                            # 在请求字符串中重新发送字符串。
     parsed_result = parsed_result._replace(
         netloc=netloc, query=urlencode(md, doseq=True)
     )
+    
     # 将元组重新组合成最终的 URL 字符串并返回。
     return urlunsplit(parsed_result)
 
@@ -165,9 +227,18 @@ def login_remembered():
     # 获取应用配置
     config = current_app.config
     # 获取“记住我”Cookie 的名称
-    cookie_name = config.get("REMEMBER_COOKIE_NAME", COOKIE_NAME)
+    cookie_name = config.get("REMEMBER_COOKIE_NAME", COOKIE_NAME)   # current_app.config 是 Flask 提供的一个接口，用于访问当前应用的配置。
+                                                                    # 这里的 config 通常指的是一个 字典（dict） 或一个 类似字典的对象，
+                                                                        # 它存储了应用程序的所有配置项。
+                                                                    # .get方法：这是 Python 字典对象的一个内置方法，用于从字典中获取指定键的值。
+                                                                    # 即： config.get("REMEMBER_COOKIE_NAME", COOKIE_NAME) 是从 config 字典
+                                                                        # 中获取键 "REMEMBER_COOKIE_NAME" 对应的值。
+                                                                        # 如果该键不存在，则返回默认值 COOKIE_NAME。    
     # 检查请求中是否存在该 Cookie，且会话中的 _remember 标记不是 'clear'
-    has_cookie = cookie_name in request.cookies and session.get("_remember") != "clear"
+    has_cookie = cookie_name in request.cookies and session.get("_remember") != "clear" # 执行顺序：先判断 cookie_name 是否在 request.cookies 中，
+                                                                                                 # 再判断 session.get("_remember") != "clear"
+                                                                                                 # 然后将两个判断值进行与运算，
+                                                                                                 # 最后将判断结果，即布尔值赋值给 has_cookie 变量。  
     # 如果存在有效的“记住我”Cookie
     if has_cookie:
         # 获取 Cookie 值
