@@ -42,24 +42,6 @@ from flask import session       # 作用：提供对当前会话的访问。它�
                                 # 用途：实现“有状态”的会话。最典型的用途是保持用户登录状态（存储用户 ID）。Flask 的 session 默认是签名 Cookie，这意味着数据存储在客户端的浏览器 Cookie 中，
                                     # 但经过加密签名以防止篡改。服务器不存储 session 数据（除非你配置了服务器端 session）
 
-    # g 与 session的区别：
-    # 特性	            g	                       session
-    # 生命周期	        单个请求 (毫秒级)	        跨多个请求 (分钟/小时/天级)
-    # 数据存储位置	    服务器内存 (请求处理期间)  	 客户端 Cookie (默认) 或 服务器存储
-    # 持久性	        临时，请求结束即消失	    持久，直到过期或被清除
-    # 主要用途	        请求内的数据共享和缓存	    用户会话的状态保持 (如登录)
-    # 访问方式	        g.some_attribute	      session['some_key']
-
-    # 总结常用项：
-        # 对于 g： g.get(key, default) 用于安全读取，
-                # g.attr = value 用于设置。
-        # 对于 session：session.get(key, default) 是获取数据，
-                    #  session[key] = value 用于设置，
-                    # session.clear() 用于登出，
-                    # session.pop() 用于一次性读取，
-                    # session.permanent 用于“记住我”，
-                    # session.modified = True 用于处理可变对象内部修改。
-                    # key in session 用于存在性检查。
 
 
 

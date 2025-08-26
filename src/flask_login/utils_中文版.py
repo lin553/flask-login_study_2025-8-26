@@ -8,7 +8,14 @@ from urllib.parse import urlunsplit
 
 from flask import current_app
 from flask import g
-from flask import has_request_context
+from flask import has_request_context   # has_request_context() 是 Flask 提供的一个实用函数 (Utility Function)，用于检查当前是否处于一个
+                                            # 有效的请求上下文 (Request Context) 中。
+                                        #  总结
+                                            # has_request_context() 是一个检查函数，用于判断当前代码执行环境是否处于一个活动的 HTTP 请求处理流程中。
+                                            # 核心目的: 避免在没有请求上下文时直接访问 request 或 session 而导致 RuntimeError。
+                                            # 典型用法: 在编写可能被用在不同上下文（如视图函数、CLI 命令、后台任务、工具函数）中的代码时，进行安全检查。
+                                            # 相关函数: has_app_context() (检查应用上下文), request_ctx (底层的请求上下文对象)。
+                                            # 简单来说，在你打算使用 request 或 session 之前，如果不确定上下文，最好先用 has_request_context() 问一句：“现在方便吗？”
 from flask import request
 from flask import session
 from flask import url_for

@@ -1,0 +1,12 @@
+# request    
+    # 它是 flask 库函数   
+    # 作用：提供对当前请求的访问。它是一个全局对象，包含了请求的所有信息，如请求方法（GET/POST）、URL、查询参数、表单数据、头信息等。
+    # 用途：这是获取客户端数据的主要方式。你可以通过它访问：
+        # request.args：URL 查询参数 (e.g., ?key=value)。
+        # request.form：表单数据（来自 POST/PUT 请求的 body）。
+        # request.values：合并了 args 和 form。
+        # request.cookies：请求中的 Cookie。
+        # request.headers：HTTP 请求头。
+        # request.method：请求方法 (GET, POST, PUT, DELETE 等)。
+        # request.url：完整的请求 URL。
+        # request.json：解析后的 JSON 数据（如果 Content-Type 是 application/json）。

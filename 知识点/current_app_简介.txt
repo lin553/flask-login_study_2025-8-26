@@ -1,0 +1,13 @@
+# current_app   
+    # 它是 flask 库函数
+    # 作用：获取当前激活的 Flask 应用实例。它允许你在应用上下文中访问应用的配置、路由等属性，而无需显式传递应用对象。
+        # 即： 创建 Flask 应用实例：    app = Flask(__name__)
+    # 用途：一旦应用上下文存在，current_app 就可以安全地访问该 Flask 实例的所有属性和方法，例如：
+        # current_app.config: 应用的配置字典。
+        # current_app.logger: 应用的日志记录器。
+        # current_app.extensions: 所有已注册的 Flask 扩展。
+        # current_app.url_map: 应用的 URL 路由映射。
+        # current_app.test_client(): 获取测试客户端。
+        # 以及任何你在 app 实例上定义的自定义属性或方法。
+    # 总结 current_app 的范围：“当前”指的是在由特定 Flask 应用实例的请求、CLI 命令或手动 app_context() 块所激活的应
+        # 用上下文生命周期内。它提供了一种全局、便捷且线程安全的方式来访问那个特定的 app 对象。

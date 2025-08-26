@@ -1,0 +1,56 @@
+# session :
+    # 它是 flask 库函数
+    # 作用：提供对当前会话的访问。它是一个全局对象，用于存储用户会话数据，如登录状态、用户偏好设置等。
+        # session 是 Flask 中用于在用户的不同 HTTP 请求之间保持状态的机制。HTTP 本身是无状态的，
+        # session 提供了有状态的用户体验基础（如登录状态）。
+    # 用途：实现“有状态”的会话。最典型的用途是保持用户登录状态（存储用户 ID）。Flask 的 session 默认是签名 Cookie，这意味着数据存储在客户端的浏览器 Cookie 中，
+        # 但经过加密签名以防止篡改。服务器不存储 session 数据（除非你配置了服务器端 session）
+
+
+
+# g             
+    # 它是 flask 库函数
+    # 作用：提供一个用于存储 请求级别 数据的命名空间对象。你可以将数据存储在 g 对象上，并在同一请求的不同函数中访问这些数据。
+        # g 对象在每次请求开始时被创建，在请求结束时被销毁。它非常适合存储在请求处理过程中需要被多个函数共享的数据，比如数据库连接、
+        # 当前登录的用户对象（在某些认证实现中）、解析后的请求数据等。注意：g 是请求级别的，不同请求之间的 g 对象是隔离的。
+    # 目的：为单个 HTTP 请求的处理过程提供一个共享的、临时的命名空间。它允许你在请求处理链中的不同函数（如 before_request 处理器、
+        # 视图函数、辅助函数）之间传递数据，而无需通过函数参数层层传递。
+    # 总结 g：g 是 Flask 提供的一个轻量级、请求级别的“便签本”或“临时仓库”。它极大地简化了在单个请求处理流程中共享数据和状态的复杂性，
+        # 是提高代码效率和可读性的重要工具，但其作用范围严格限定在单个 HTTP 请求的生命周期内。
+
+
+
+# g 与 session的区别：
+    # 特性	            g	                       session
+    # 生命周期	        单个请求 (毫秒级)	        跨多个请求 (分钟/小时/天级)
+    # 数据存储位置	    服务器内存 (请求处理期间)  	 客户端 Cookie (默认) 或 服务器存储
+    # 持久性	        临时，请求结束即消失	    持久，直到过期或被清除
+    # 主要用途	        请求内的数据共享和缓存	    用户会话的状态保持 (如登录)
+    # 访问方式	        g.some_attribute	      session['some_key']
+
+
+# 总结常用项：
+    # 对于 g： g.get(key, default) 用于安全读取，
+            # g.attr = value 用于设置。
+    # 对于 session：session.get(key, default) 是获取数据，
+                #  session[key] = value 用于设置，
+                # session.clear() 用于登出，
+                # session.pop() 用于一次性读取，
+                # session.permanent 用于“记住我”，
+                # session.modified = True 用于处理可变对象内部修改。
+                # key in session 用于存在性检查。
+                    
+    
+# session 最主要的用途是让你存储自定义数据。这些是你 自己定义 的“成员”，通常以键值对的形式存在。
+    # 你可以在 session 中存储任何可以被 JSON 序列化的数据类型（字符串、数字、列表、字典等）。
+    #     常见的键 (Key)    存储的值 (Value)	     说明
+    #     'user_id'	        int 或 str	            最常见的用法，存储当前登录用户的唯一 ID。用于在请求间识别用户。
+    #     'logged_in'	    bool	                标记用户是否已登录。虽然 flask-login 有更好的方式（current_user.is_authenticated），但有时也会用。
+    #     'username'	    str	                    存储用户名，避免每次查询数据库。
+    #     'cart'	        list 或 dict	        电商网站中存储购物车内容。
+    #     'preferences'	    dict	                存储用户的偏好设置，如主题、语言等。
+    #     'oauth_token'	    str 或 dict	            存储第三方登录（如 OAuth）的访问令牌。
+    #     '_flashes'	    list	                Flask 内部使用。存储通过 flash() 函数添加的消息。这些消息在下一次请求中被 get_flashed_messages() 读取后会自动清除。
+    #     '_remember'	    str ("set" 或 "clear")	Flask-Login 内部使用。用于 Remember Me 功能的状态管理。
+    #     '_id'	            str	                    Flask-Login 内部使用。用于 session 记忆的唯一标识符。
+    
