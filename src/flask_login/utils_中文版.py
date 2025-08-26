@@ -274,7 +274,20 @@ def login_user(user, remember=False, duration=None, force=False, fresh=True):
         return False
 
     # 获取用户的唯一标识符（ID）。使用 login_manager 配置的 id_attribute 方法（默认是 'get_id'）。
-    user_id = getattr(user, current_app.login_manager.id_attribute)()
+    # 整体意思: 动态地获取 user 对象上名为 get_id（或由 id_attribute 指定的其他名字）的方法，并立即调用它，将其返回值赋给 user_id。
+    user_id = getattr(user, current_app.login_manager.id_attribute)()  
+            # getattr() 是 Python 的内置函数 (Built-in Function)。可以在任何 Python 环境中直接使用它，无需 import
+                #作用: getattr(object, name[, default]) 用于获取一个对象的属性值。
+                    # object: 要获取属性的对象。
+                    # name: 要获取的属性名（字符串）。
+                    # default (可选): 如果属性不存在时返回的默认值。如果未提供且属性不存在，则抛出 AttributeError。
+            # 此处 getattr(...)() 有两个括号，第一个括号返回的是 getattr(...) 函数的执行结果，而这个结果是 "get_id" 这个函数，
+                                         # 那第二个括号就代表着：“get_id” + “()” ， 即：返回这个 get_id() 函数的执行结果，最后赋值给 user_id 。 
+            # 代码使用 getattr(user, current_app.login_manager.id_attribute) 而不是直接写 user.get_id() 的原因是灵活性和可配置性。
+                # id_attribute 是一个可配置的属性。默认是 "get_id"，但开发者可以将其改为其他名字，比如 "get_user_id" 或 "id"。
+                # 通过 getattr()，Flask-Login 可以动态地根据 id_attribute 的值去查找用户对象上的对应方法。
+                # 这样，Flask-Login 就不强制要求用户对象必须有一个叫 get_id 的方法，只要有一个名字由 id_attribute 指定的、能返回用户 ID 的方法即可。
+
     # 将用户 ID 存入会话
     session["_user_id"] = user_id
     # 标记会话是否“新鲜”
