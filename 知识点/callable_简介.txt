@@ -1,0 +1,27 @@
+ callable() 函数
+
+    来源:           callable() 是 Python 的内置函数 (Built-in Function)。
+    作用:           检查一个对象是否是可调用的 (callable)。
+    参数:           一个对象。
+    返回值:         布尔值 (True 或 False)。
+    判断标准:       如果该对象可以使用 () 操作符来“调用”（即执行），那么它就是可调用的。
+    是可调用的:     函数、方法、类、实现了 __call__ 方法的对象、lambda 表达式等。
+    不是可调用的:   整数、字符串、列表、字典等普通数据类型。
+
+
+示例:
+
+    def my_func():
+        pass
+
+    class MyClass:
+        def __call__(self):
+            pass
+
+    obj = MyClass()
+
+    print(callable(my_func))        # True
+    print(callable(obj))            # True (因为实现了 __call__)
+    print(callable(len))            # True (内置函数)
+    print(callable(123))            # False
+    print(callable("hello"))        # False

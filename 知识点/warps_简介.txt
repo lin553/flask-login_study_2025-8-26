@@ -1,0 +1,159 @@
+`@wraps(func)` 是 Python 标准库 `functools` 中一个极其重要和常用的装饰器工厂（Decorator Factory）。它的主要目的是**在创建装饰器时，保留被装饰函数的元数据（Metadata）**。
+
+---
+
+### 1. 问题的根源：普通装饰器会“丢失”元数据
+
+当你写一个装饰器时，如果不使用 `@wraps`，会导致被装饰函数的一些重要信息被装饰器内部的包装函数所覆盖。
+
+```python
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        """包装函数的文档字符串"""
+        print(f"调用函数: {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@my_decorator
+def greet(name):
+    """向某人问好"""
+    return f"Hello, {name}!"
+
+# 现在检查 greet 函数的元数据
+print(greet.__name__)        # 输出: wrapper (期望是 'greet')
+print(greet.__doc__)         # 输出: 包装函数的文档字符串 (期望是 '向某人问好')
+print(greet.__module__)      # 可能正确，但其他属性丢失
+```
+
+可以看到，`greet` 的 `__name__` 和 `__doc__` 都变成了 `wrapper` 函数的，这破坏了函数的“身份”和文档，对调试、日志记录、文档生成工具（如 Sphinx）等非常不利。
+
+---
+
+### 2. `@wraps(func)` 的功能
+
+`@wraps(func)` 就是为了解决这个问题而生的。当你在装饰器内部的 `wrapper` 函数上使用 `@wraps(func)` 时，它会**自动将原函数 `func` 的关键元数据复制到 `wrapper` 函数上**。
+
+这样，从外部看，被装饰的函数依然“表现得像”它自己。
+
+#### 主要复制的元数据包括：
+
+*   `__name__` : 函数名
+*   `__qualname__` : 限定名称（在嵌套函数/类方法中很重要）
+*   `__module__` : 定义函数的模块名
+*   `__doc__` : 文档字符串 (docstring)
+*   `__annotations__` : 类型注解
+*   `__dict__` : 函数的属性字典（`wrapper.__dict__.update(func.__dict__)`）
+*   还会正确设置 `__wrapped__` 属性，指向原始函数。
+
+---
+
+### 3. `@wraps(func)` 的源代码分析
+
+`@wraps` 的源代码位于 Python 标准库的 `functools.py` 中。以下是其核心实现的简化和注释版本：
+
+```python
+# functools.py (简化版)
+from functools import.WRAPPER_ASSIGNMENTS, WRAPPER_UPDATES
+
+def wraps(wrapped,
+          assigned = WRAPPER_ASSIGNMENTS,
+          updated = WRAPPER_UPDATES):
+    """
+    Decorator factory to apply update_wrapper() to a wrapper function
+
+    Returns a decorator that invokes update_wrapper() with the decorated
+    function as the wrapper argument and the arguments to wraps() as the
+    remaining arguments. Default arguments are as for update_wrapper().
+    This is a convenience function to simplify applying partial() to
+    update_wrapper().
+    """
+    # `wraps` 是一个装饰器工厂，它返回一个真正的装饰器。
+    # 这个返回的装饰器会接收 `wrapper` 函数作为参数。
+    return update_wrapper
+
+# --- update_wrapper 是真正的“工作”函数 ---
+def update_wrapper(wrapper,
+                   wrapped,
+                   assigned = WRAPPER_ASSIGNMENTS,
+                   updated = WRAPPER_UPDATES):
+    """
+    Update a wrapper function to look like the wrapped function
+
+       wrapper -- the function to be updated
+       wrapped -- the original function
+       assigned -- tuple naming the attributes assigned directly
+       from the wrapped function to the wrapper function (defaults to
+       functools.WRAPPER_ASSIGNMENTS)
+       updated -- tuple naming the attributes of the wrapper that
+       are updated with the corresponding attribute from the wrapped
+       function (defaults to functools.WRAPPER_UPDATES)
+    """
+    # 将 wrapped 函数的关键属性复制到 wrapper 函数上
+    for attr in assigned:
+        # getattr(wrapped, attr, None) 获取 wrapped 的属性，如果不存在则返回 None
+        # setattr(wrapper, attr, ...) 将值设置到 wrapper 上
+        setattr(wrapper, attr, getattr(wrapped, attr, None))
+    
+    # 将 wrapped 函数的 __dict__ 更新到 wrapper 的 __dict__ 中
+    for attr in updated:
+        getattr(wrapper, attr).update(getattr(wrapped, attr, {}))
+    
+    # Important: 设置一个特殊的属性，指向原始函数
+    wrapper.__wrapped__ = wrapped
+    
+    # 返回 wrapper 函数，以便可以继续使用
+    return wrapper
+
+# --- 默认要复制和更新的属性 ---
+WRAPPER_ASSIGNMENTS = ('__module__', '__name__', '__qualname__', '__doc__',
+                       '__annotations__')
+WRAPPER_UPDATES = ('__dict__',)
+```
+
+#### 关键点解析
+
+1.  **`wraps` 是一个工厂**: `wraps(func)` 调用后，它返回 `update_wrapper` 函数。所以 `@wraps(func)` 实际上等价于 `@update_wrapper`，并且 `update_wrapper` 的 `wrapped` 参数就是 `func`。
+2.  **`update_wrapper` 执行复制**: 它遍历 `WRAPPER_ASSIGNMENTS` 元组中的属性名（如 `'__name__'`, `'__doc__'`），使用 `getattr` 从 `wrapped` 函数获取这些属性的值，然后用 `setattr` 将这些值设置到 `wrapper` 函数上。
+3.  **`__dict__` 的特殊处理**: `__dict__` 存储了函数的自定义属性。`update_wrapper` 会获取 `wrapper.__dict__` 和 `wrapped.__dict__`，然后用后者的内容更新前者（`wrapper.__dict__.update(wrapped.__dict__)`）。
+4.  **`__wrapped__` 属性**: 这是一个非常有用的属性，它明确地指向了被包装的原始函数。你可以通过 `my_decorated_function.__wrapped__` 来访问原始的、未被装饰的函数。
+
+---
+
+### 4. 正确使用 `@wraps(func)`
+
+```python
+from functools import wraps
+
+def my_decorator(func):
+    @wraps(func)  # 👈 关键：在 wrapper 上应用 @wraps
+    def wrapper(*args, **kwargs):
+        """包装函数的文档字符串"""
+        print(f"调用函数: {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@my_decorator
+def greet(name):
+    """向某人问好"""
+    return f"Hello, {name}!"
+
+# 现在检查 greet 函数的元数据
+print(greet.__name__)        # 输出: greet (正确！)
+print(greet.__doc__)         # 输出: 向某人问好 (正确！)
+print(greet.__module__)      # 输出: 模块名 (正确！)
+
+# 访问原始函数 (如果需要)
+original_greet = greet.__wrapped__
+print(original_greet("World")) # 输出: Hello, World!
+```
+
+现在，`greet` 函数的元数据被完美地保留了，同时 `__wrapped__` 属性也提供了对原始函数的访问。
+
+---
+
+### 5. 总结
+
+*   **功能**: `@wraps(func)` 用于在编写装饰器时，确保被装饰函数的元数据（如 `__name__`, `__doc__`）不被装饰器内部的包装函数所覆盖，保持函数的“身份”。
+*   **来源**: Python 标准库 `functools` 模块。
+*   **原理**: 它是一个装饰器工厂，其核心是 `update_wrapper` 函数。该函数通过 `setattr` 和 `getattr` 将原函数的关键属性复制到包装函数上，并设置 `__wrapped__` 属性。
+*   **必要性**: **强烈建议**在编写任何非 trivial 的装饰器时都使用 `@wraps(func)`。它是编写专业、健壮的 Python 代码的良好实践。

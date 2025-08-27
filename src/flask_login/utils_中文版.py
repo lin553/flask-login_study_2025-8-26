@@ -421,8 +421,16 @@ def login_required(func):
         # flask 1.x 兼容性
         # current_app.ensure_sync 仅在 Flask >= 2.0 中可用
         # 对于 Flask 2.0+，使用 ensure_sync 确保异步视图能被正确调用。
-        if callable(getattr(current_app, "ensure_sync", None)):
-            return current_app.ensure_sync(func)(*args, **kwargs)
+        if callable(getattr(current_app, "ensure_sync", None)):     # callable() 检查一个对象是否是可调用的, 如果该对象可以使用 () 操作
+                                                                                # 符来“调用”（即执行），那么它就是可调用的
+            return current_app.ensure_sync(func)(*args, **kwargs)   # 为什么需要 ensure_sync？
+                                                                        # 在 Flask 2.0 之前，Flask 建立在 WSGI 之上，完全是同步的。
+                                                                        # 引入 async/await 支持后，Flask 需要一种机制来桥接同步和异步世界：
+                                                                            # WSGI 服务器: 期望处理同步的 wsgi_app。
+                                                                            # ASGI 服务器: 可以处理异步的 asgi_app。
+                                                                        # ensure_sync 的作用: 它允许一个异步视图函数在 WSGI 环境中被
+                                                                            # 调用（通过在后台启动一个事件循环并阻塞等待），同时也允许同步
+                                                                            # 函数在需要异步调用的场景下被包装。
         # 对于 Flask 1.x，直接调用原函数。
         return func(*args, **kwargs)
 
@@ -481,6 +489,15 @@ def set_login_view(login_view, blueprint=None):
     :type login_view: str
     :param blueprint: 应设置此登录视图的蓝图。默认为 ``None``。
     :type blueprint: object
+    
+    登陆视图与蓝图的区别：
+        登录视图是一个字符串，代表一个目的地（登录页面的端点或 URL）。
+        蓝图是一个对象，代表应用的一个功能模块或子应用。
+        区别: 它们是完全不同类型和用途的东西。登录视图是“去哪”，蓝图是“在哪”（哪个模块）。
+        联系: set_login_view(login_view, blueprint=None) 函数提供了精细化控制的能力。
+        当 blueprint=None 时：设置全局默认的登录视图。
+        当 blueprint=some_blueprint 时：为特定的蓝图设置一个专属的登录视图，覆盖全局设置。
+    这种设计使得 Flask-Login 能够灵活地适应从简单单页面登录到复杂多角色、多入口登录系统的需求。    
     """
     # 获取当前应用中已注册的蓝图登录视图的数量
     num_login_views = len(current_app.login_manager.blueprint_login_views)
