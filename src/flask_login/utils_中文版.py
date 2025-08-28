@@ -490,6 +490,17 @@ def set_login_view(login_view, blueprint=None):
     :param blueprint: 应设置此登录视图的蓝图。默认为 ``None``。
     :type blueprint: object
     
+    本代码实现：为应用或蓝图设置登录视图。
+            如果传递了蓝图，则登录视图会被设置在 ``blueprint_login_views`` 字典中，键为蓝图名称，
+                    同时全局视图 current_app.login_manager.login_view 会被置为 None，且 blueprint_login_views['None'] 存入全局 login_view 。
+            如果整个 app实例 都没传递蓝图，则只设置全局视图 current_app.login_manager.login_view 
+                    会被设置为传入的 login_view， 而此时蓝图字典 blueprint_login_views 为空 且 blueprint_login_views = 0 。
+            即：current_app.login_manager.login_view 是否为 None，取决于是否使用了蓝图。
+    
+    
+    更具体解释见知识点。
+    
+    
     登陆视图与蓝图的区别：
         登录视图是一个字符串，代表一个目的地（登录页面的端点或 URL）。
         蓝图是一个对象，代表应用的一个功能模块或子应用。
