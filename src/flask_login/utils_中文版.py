@@ -196,7 +196,8 @@ def login_url(login_view, next_url=None, next_field="next"):
     # 解析基础 URL
     parsed_result = urlsplit(base)  # urlsplit 函数是Python标准库中的一个模块，位于urllib.parse中。它将给定的URL字符串解析为一个namedtuple对象，
                                             # 并返回五个组成URL的部分，分别是scheme、netloc、path、query和fragment。
-    # 解析基础 URL 的查询字符串，得到一个字典（保留空值）
+    # 解析基础 URL 的查询字符串，得到一个字典（保留空值），parse_qs 是 Python 标准库 urllib.parse 模块中的一个函数，
+    # 用于解析 URL 中的查询字符串 (Query String)，并将其转换为一个字典，其中每个键对应一个或多个值。
     md = parse_qs(parsed_result.query, keep_blank_values=True)
     
     # 使用 make_next_param 处理 next_url，生成一个可能被简化的 next 参数值。
